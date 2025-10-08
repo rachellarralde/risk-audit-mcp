@@ -1,11 +1,12 @@
 {
   "name": "risk-audit-mcp",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "description": "Risk Audit MCP server that scans projects for security issues (XSS, injections, etc.)",
   "bin": {
-    "risk-audit": "dist/index.js"
+    "risk-audit": "dist/index.js",
+    "risk-audit-mcp": "dist/index.js"
   },
   "scripts": {
     "dev": "tsx src/index.ts",

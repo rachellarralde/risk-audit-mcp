@@ -28,18 +28,19 @@ Risk Audit is a Model Context Protocol (MCP) server and CLI that scans your proj
 - `npm run mcp` — start the MCP server (stdio).
 - `npm run scan` — quick scan (unicode bars + emoji headers).
 
-## Quick Start (CLI)
-- Default quick scan (unicode bars + emoji headers, rule IDs hidden):
-  - `risk-audit` or `risk-audit --quick`
-- Custom examples:
-  - `risk-audit --scan . --format ascii --style unicode --icons emoji`
-  - `risk-audit --scan src --format json` (for scripts/CI)
-  - `risk-audit --scan . --format ascii --show-ids` (show rule IDs in ASCII)
-  - `risk-audit --scan . --format ascii --sarif risk-audit.sarif.json` (export SARIF)
-  - `risk-audit --scan . --format ascii --propose-fixes` (show dry‑run patch suggestions)
+## Quick Start (Beginner‑friendly)
 
-## Run MCP Server (Simple)
-- After building, start the MCP server with a simple command:
+Install into any project:
+- `npm install --save-dev risk-audit-mcp`
+
+Run a quick scan (default style):
+- `npx risk-audit-mcp`  (same as `npx risk-audit-mcp --quick`)
+
+Use as an MCP server with Claude Desktop or Codex CLI:
+- One‑line command (what the client runs): `risk-audit-mcp --mcp-stdio`
+
+## Run MCP Server
+- Start the MCP server with a simple command:
   - `npm run mcp`
   - Or use the binary directly if installed/linked: `risk-audit --mcp-stdio`
   - Or via npx without global install: `npx risk-audit --mcp-stdio`
@@ -47,12 +48,17 @@ Risk Audit is a Model Context Protocol (MCP) server and CLI that scans your proj
 ## Client Setup Snippets
 
 ### Claude Desktop
+One‑line command the app will run:
+
+`risk-audit-mcp --mcp-stdio`
+
+Where to put it (macOS): edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
 
 {
   "mcpServers": {
     "risk-audit": {
-      "command": "risk-audit",
+      "command": "risk-audit-mcp",
       "args": ["--mcp-stdio"],
       "env": {}
     }
@@ -64,12 +70,17 @@ Notes:
   - `"command": "node", "args": ["/absolute/path/to/dist/index.js", "--mcp-stdio"]`
 
 ### Codex CLI
+One‑line command the CLI will run:
+
+`risk-audit-mcp --mcp-stdio`
+
+How to register it in your Codex CLI config:
 Register the MCP server so Codex can launch it over stdio. Example configuration entry:
 
 {
   "mcpServers": {
     "risk-audit": {
-      "command": "risk-audit",
+      "command": "risk-audit-mcp",
       "args": ["--mcp-stdio"]
     }
   }
@@ -90,8 +101,8 @@ Notes:
 - Rule IDs are hidden by default in ASCII (show with `--show-ids`). JSON always includes `ruleId`.
 
 ## Output Format
-- ASCII progress bars (default): `|==========......| 10/16 (62%)`
-- Unicode bars (optional): `[██████████░░░░░░] 10/16 (62%)` (use `--style unicode`)
+- ASCII progress bars: `|==========......| 10/16 (62%)`
+- Unicode bars: `[██████████░░░░░░] 10/16 (62%)` 
 
 ## Configuration (.vibecheckrc)
 Place a `.vibecheckrc` (YAML) or `.vibecheckrc.json` at the project root.
@@ -111,17 +122,34 @@ rules:
 
 CLI respects config in project root for `--scan <dir>`. MCP `scan_project` also loads config from the given root.
 
-## Quick Defaults and Aliases
-- Default behavior (no args) runs a quick scan of the current directory with unicode bars and emoji icons:
-  - Equivalent to: `risk-audit --scan . --format ascii --style unicode --icons emoji`
-- Shortcut flag:
-  - `risk-audit --quick`
-- NPM script alias (from this repo):
-  - `npm run scan`
-
 ## Security & Privacy
 - All scanning runs locally; no code is uploaded anywhere.
 - YAML rules are loaded from your repo’s `rules/` folder, if present. Be careful when adding third‑party rules to avoid regexes that cause slow scans (we cap matches per rule/file).
 - We never execute your code; we only read files.
 
-
+## Troubleshooting
+- “command not found: risk-audit-mcp”
+  - Use `npx risk-audit-mcp` or ensure npm’s global bin is on your PATH:
+    - macOS/Linux: `echo $(npm bin -g)` then `export PATH="$(npm bin -g):$PATH"`
+    - Or install locally: `npm i -D risk-audit-mcp` and run `npx risk-audit-mcp`
+- MCP server shows only one line and “does nothing”
+  - That’s expected: `risk-audit-mcp --mcp-stdio` waits for the client to connect via stdio.
+  - Verify by adding it to Claude/Codex as shown above, or run a CLI scan instead.
+- Claude Desktop doesn’t show the server
+  - Double‑check the config path on macOS:
+    `~/Library/Application Support/Claude/claude_desktop_config.json`
+  - Make sure the entry uses this exact command: `risk-audit-mcp --mcp-stdio`
+  - Restart Claude after editing the config.
+- Codex CLI can’t start the server
+  - Ensure your config registers:
+    `command: "risk-audit-mcp"`, `args: ["--mcp-stdio"]`
+  - Test in a terminal: `risk-audit-mcp --mcp-stdio` (should wait quietly)
+- Unicode bars look weird
+  - Use ASCII bars: add `--style ascii`
+- Don’t like emoji
+  - Use ASCII icons: add `--icons ascii`
+- Want rule IDs visible in the ASCII report
+  - Add `--show-ids` (JSON always includes `ruleId`).
+- Scans feel slow on large repos
+  - Limit scope: create `.vibecheckrc` with `include`/`exclude`, or run with `--scan src`.
+  - Increase severity threshold: set `severityMin: medium` in `.vibecheckrc`.
