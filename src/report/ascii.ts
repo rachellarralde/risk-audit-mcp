@@ -1,5 +1,6 @@
 import type { Finding, Severity } from '../types.js';
 import { colors } from './colors.js';
+import { basename } from 'node:path';
 
 type Style = 'ascii' | 'unicode';
 type IconSet = 'ascii' | 'emoji';
@@ -62,7 +63,8 @@ export function renderAscii(findings: Finding[], opts?: AsciiOptions): string {
     const coloredTitle = sev === 'critical' ? colors.red(titleText) : sev === 'medium' ? colors.yellow(titleText) : colors.cyan(titleText);
     sections.push(`${emojiPrefix}${coloredTitle}: ${bar(group.length, total, opts?.barWidth ?? 24, opts?.style ?? 'ascii')}`);
     group.forEach((f, idx) => {
-      const locRaw = f.file ? `${f.file}:${f.range.start.line}-${f.range.end.line}` : `offset`;
+      const fileLabel = f.file ? `${basename(f.file)}` : 'offset';
+      const locRaw = f.file ? `${fileLabel}:${f.range.start.line}-${f.range.end.line}` : `offset`;
       const loc = colors.green(locRaw);
       const head = (opts?.showRuleIds ?? false) ? `${f.ruleId} ${f.message}` : `${f.message}`;
       sections.push(`${idx + 1}. ${head} — ${loc}`);
