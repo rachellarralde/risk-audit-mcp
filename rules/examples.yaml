@@ -1,0 +1,14 @@
+- id: YAML001
+  title: Example YAML rule (JS): alert() usage
+  severity: low
+  language: js
+  description: Using alert() can indicate debug code or UX issues.
+  pattern: "\\balert\\s*\\("
+
+- id: YAML100
+  title: Example YAML rule (TS): document.write
+  severity: medium
+  language: ts
+  description: document.write can enable XSS and block rendering.
+  pattern: "\\bdocument\\.write\\s*\\("
+
