@@ -1,6 +1,13 @@
-node_modules/
-dist/
+# OS files
 .DS_Store
-*.log
-coverage/
+Thumbs.db
 
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Logs
+*.log

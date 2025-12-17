@@ -1,155 +1,217 @@
-# Risk Audit MCP — Security Scanner
+# Security Audit Skill
 
-![Risk Audit MCP Logo](assets/logo.png)
+A portable security auditing skill that teaches AI coding assistants to become expert security auditors. Works with Claude Code, Codex CLI, Cursor, and any AI that can learn from prompts.
 
-Risk Audit is a Model Context Protocol (MCP) server and CLI that scans your project for common security issues (XSS, injections, SSRF, path traversal, etc.). It runs locally, works offline, and gives clear, grouped results with suggested fixes.
+## What is This?
 
-## What is it?
-- A tool that looks for risky patterns in your code and explains how to improve them.
-- Works both as a CLI you can run in any repo and as an MCP server that IDE/AI tools can call.
+This is **not** a tool you install and run. It's a **skill** - a set of instructions and patterns that teach an AI assistant how to perform comprehensive security audits on any codebase.
 
-## Who is it for?
-- Beginners who want simple, actionable guidance to improve security.
-- Developers who want a fast local scan they can wire into their workflow or MCP-enabled tools.
+Think of it like giving your AI assistant a security certification.
 
-## Why use it?
-- Quick feedback on common pitfalls (XSS, injections, SSRF, path traversal).
-- Clear severity groups and practical fix suggestions.
-- Zero network calls; your code never leaves your machine.
+## Why a Skill Instead of a Tool?
 
-## Requirements
-- Node.js >= 18
+| Traditional Tool | AI Skill |
+|-----------------|----------|
+| Runs regex patterns mechanically | Understands context and intent |
+| Fixed rules, many false positives | Can reason about actual risk |
+| Only finds exact pattern matches | Can identify novel vulnerabilities |
+| Reports everything, you filter | Prioritizes what matters |
+| Just flags issues | Explains why and how to fix |
 
-## Scripts
-- `npm run dev` — run the TypeScript entrypoint via tsx (no build).
-- `npm run build` — compile TypeScript to `dist/` via `tsc`.
-- `npm start` — run the compiled output (`node dist/index.js`).
-- `npm test` — build then run tests with Vitest.
-- `npm run mcp` — start the MCP server (stdio).
-- `npm run scan` — quick scan (unicode bars + emoji headers).
+An AI with security knowledge can:
+- Follow data flow across functions and files
+- Understand your specific architecture
+- Explain attack scenarios in context
+- Suggest fixes that match your codebase style
+- Answer follow-up questions
 
-## Quick Start (Beginner‑friendly)
+## Quick Start
 
-Install into any project:
-- `npm install --save-dev risk-audit-mcp`
+### Claude Code
 
-Run a quick scan (default style):
-- `npx risk-audit-mcp`  (same as `npx risk-audit-mcp --quick`)
+Copy the skill file to your project or global config:
 
-Use as an MCP server with Claude Desktop or Codex CLI:
-- One‑line command (what the client runs): `risk-audit-mcp --mcp-stdio`
+```bash
+# Per-project (recommended)
+mkdir -p .claude/skills
+cp skills/security-audit.md .claude/skills/
 
-## Run MCP Server
-- Start the MCP server with a simple command:
-  - `npm run mcp`
-  - Or use the binary directly if installed/linked: `risk-audit --mcp-stdio`
-  - Or via npx without global install: `npx risk-audit --mcp-stdio`
+# Or install globally
+mkdir -p ~/.claude/skills
+cp skills/security-audit.md ~/.claude/skills/
+```
 
-## Client Setup Snippets
-
-### Claude Desktop
-One‑line command the app will run:
-
-`risk-audit-mcp --mcp-stdio`
-
-Where to put it (macOS): edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
-
-{
-  "mcpServers": {
-    "risk-audit": {
-      "command": "risk-audit-mcp",
-      "args": ["--mcp-stdio"],
-      "env": {}
-    }
-  }
-}
-
-Notes:
-- Ensure `risk-audit` is on your PATH. If not, use:
-  - `"command": "node", "args": ["/absolute/path/to/dist/index.js", "--mcp-stdio"]`
+Then ask Claude Code to audit your code:
+```
+"Audit this codebase for security vulnerabilities"
+"Check src/api for injection risks"
+"Is this authentication implementation secure?"
+```
 
 ### Codex CLI
-One‑line command the CLI will run:
 
-`risk-audit-mcp --mcp-stdio`
+Add the skill to your Codex instructions:
 
-How to register it in your Codex CLI config:
-Register the MCP server so Codex can launch it over stdio. Example configuration entry:
+```bash
+# Add to your AGENTS.md or instructions file
+cat skills/security-audit.md >> AGENTS.md
+```
 
+Or reference it in your Codex config:
+```json
 {
-  "mcpServers": {
-    "risk-audit": {
-      "command": "risk-audit-mcp",
-      "args": ["--mcp-stdio"]
-    }
-  }
+  "instructions": "When asked about security, follow the methodology in skills/security-audit.md"
 }
+```
 
-Notes:
-- You can also point to Node directly if needed:
-  - `"command": "node", "args": ["/absolute/path/to/dist/index.js", "--mcp-stdio"]`
-- The server stays active until the client closes stdin.
+### Cursor / Other AI Editors
 
-## Understanding The Output
-- Three groups by priority (with emoji in headers only):
-  - ⚠️ Critical (fix immediately)
-  - 🔍 Medium Priority
-  - ⓘ Low Priority
-- Each group has a progress bar and a numbered list of findings.
-- File paths and line ranges are colored green so they stand out.
-- Rule IDs are hidden by default in ASCII (show with `--show-ids`). JSON always includes `ruleId`.
+Add to your rules or system prompt:
+1. Open settings/rules
+2. Add the contents of `skills/security-audit.md`
+3. Or reference it: "For security audits, use the methodology in skills/security-audit.md"
 
-## Output Format
-- ASCII progress bars: `|==========......| 10/16 (62%)`
-- Unicode bars: `[██████████░░░░░░] 10/16 (62%)` 
+### Any AI Chat
 
-## Configuration (.vibecheckrc)
-Place a `.vibecheckrc` (YAML) or `.vibecheckrc.json` at the project root.
+Simply paste the skill content before your question:
+```
+[paste skills/security-audit.md]
 
-Example YAML:
+Now audit this code for security issues:
+[paste your code]
+```
 
-severityMin: medium
-include: ["src/", "api/"]
-exclude: ["dist/", "node_modules/"]
-rules:
-  disable: ["YAML001"]
-  enable: []
+## What Gets Detected
 
-- severityMin: filter out findings below this severity
-- include/exclude: path substrings to include or exclude when scanning projects
-- rules.enable/disable: whitelist/blacklist rule IDs
+### Critical (Fix Immediately)
+- **SQL Injection** - Concatenated queries, f-strings in execute()
+- **Command Injection** - exec() with user input, shell=True
 
-CLI respects config in project root for `--scan <dir>`. MCP `scan_project` also loads config from the given root.
+### Medium Priority
+- **XSS** - innerHTML, dangerouslySetInnerHTML, document.write
+- **SSRF** - User-controlled URLs in fetch/axios/requests
+- **Path Traversal** - User input in file operations
+- **NoSQL Injection** - Variable objects in MongoDB queries
 
-## Security & Privacy
-- All scanning runs locally; no code is uploaded anywhere.
-- YAML rules are loaded from your repo’s `rules/` folder, if present. Be careful when adding third‑party rules to avoid regexes that cause slow scans (we cap matches per rule/file).
-- We never execute your code; we only read files.
+### Low Priority
+- **Template Injection** - Variable templates
+- **Debug Code** - alert(), console.log with sensitive data
 
-## Troubleshooting
-- “command not found: risk-audit-mcp”
-  - Use `npx risk-audit-mcp` or ensure npm’s global bin is on your PATH:
-    - macOS/Linux: `echo $(npm bin -g)` then `export PATH="$(npm bin -g):$PATH"`
-    - Or install locally: `npm i -D risk-audit-mcp` and run `npx risk-audit-mcp`
-- MCP server shows only one line and “does nothing”
-  - That’s expected: `risk-audit-mcp --mcp-stdio` waits for the client to connect via stdio.
-  - Verify by adding it to Claude/Codex as shown above, or run a CLI scan instead.
-- Claude Desktop doesn’t show the server
-  - Double‑check the config path on macOS:
-    `~/Library/Application Support/Claude/claude_desktop_config.json`
-  - Make sure the entry uses this exact command: `risk-audit-mcp --mcp-stdio`
-  - Restart Claude after editing the config.
-- Codex CLI can’t start the server
-  - Ensure your config registers:
-    `command: "risk-audit-mcp"`, `args: ["--mcp-stdio"]`
-  - Test in a terminal: `risk-audit-mcp --mcp-stdio` (should wait quietly)
-- Unicode bars look weird
-  - Use ASCII bars: add `--style ascii`
-- Don’t like emoji
-  - Use ASCII icons: add `--icons ascii`
-- Want rule IDs visible in the ASCII report
-  - Add `--show-ids` (JSON always includes `ruleId`).
-- Scans feel slow on large repos
-  - Limit scope: create `.vibecheckrc` with `include`/`exclude`, or run with `--scan src`.
-  - Increase severity threshold: set `severityMin: medium` in `.vibecheckrc`.
+### Beyond Pattern Matching
+
+The AI can also review:
+- Authentication & session handling
+- Authorization & access controls
+- Cryptography usage
+- Dependency vulnerabilities
+- Security headers & configuration
+- Secrets management
+- Error handling
+
+## Files
+
+```
+skills/
+├── security-audit.md        # Main skill - comprehensive methodology
+└── vulnerability-patterns.md # Quick reference - patterns & regex
+```
+
+### security-audit.md
+The complete skill teaching:
+- Systematic audit methodology
+- Taint analysis (tracking untrusted data)
+- Vulnerability patterns with examples
+- Language-specific guidance (JS/TS, Python, React)
+- Fix recommendations
+- Output format
+
+### vulnerability-patterns.md
+Quick reference containing:
+- All detection patterns in table format
+- Regex patterns for grep/ripgrep
+- Severity classifications
+- Taint source patterns
+
+## Example Session
+
+```
+You: Audit this Express route for security issues
+
+AI: I'll analyze this route using systematic security methodology...
+
+## Security Audit: user-routes.js
+
+### Critical Issues (1)
+
+#### SQL Injection at line 24
+**Code:**
+```javascript
+db.query(`SELECT * FROM users WHERE id = ${req.params.id}`)
+```
+**Risk:** Attacker can inject SQL via the id parameter to extract or modify database contents.
+**Fix:**
+```javascript
+db.query('SELECT * FROM users WHERE id = ?', [req.params.id])
+```
+
+### Medium Issues (2)
+
+#### Path Traversal at line 31
+...
+
+### Recommendations
+1. Use parameterized queries throughout
+2. Add input validation middleware
+3. Consider using an ORM like Prisma
+```
+
+## Extending the Skill
+
+### Add Custom Patterns
+
+Edit `skills/vulnerability-patterns.md` to add patterns specific to your stack:
+
+```markdown
+### Custom: Unsafe Deserialization
+
+| ID | Language | Pattern | Description |
+|----|----------|---------|-------------|
+| CUSTOM001 | Python | `pickle\.loads?\s*\(` | Pickle deserialization |
+```
+
+### Add Framework-Specific Rules
+
+Extend `skills/security-audit.md` with your framework's security considerations:
+
+```markdown
+## Next.js Specific
+
+### Server Actions
+- Validate all inputs in server actions
+- Don't expose sensitive data in client components
+- Use `headers()` and `cookies()` safely
+```
+
+## Philosophy
+
+**Zero network calls** - Everything runs locally in your AI's context
+
+**Teach, don't just flag** - The AI explains vulnerabilities, not just lists them
+
+**Context-aware** - The AI understands your code, not just pattern matches
+
+**Portable** - Works with any AI that can read markdown
+
+**Extensible** - Add your own patterns and rules
+
+## Contributing
+
+Add patterns, improve explanations, support more languages:
+
+1. Fork this repo
+2. Edit files in `skills/`
+3. Submit a PR
+
+## License
+
+MIT - Use freely, contribute back if you can.
